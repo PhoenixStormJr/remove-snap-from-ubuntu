@@ -5,4 +5,4 @@ WARNING: This is mainly untested! It may break Ubuntu, as it uses Linux Mint rep
 
 If you just want to install the .deb versions of firefox and chromium with apt, use [remove-snap.sh](https://github.com/PhoenixStormJr/remove-snap-from-ubuntu/blob/main/remove-snap.sh)
 
-If you hate snap with a passion and want to nuke it entirely, use 
+If you hate snap with a passion and want to nuke it entirely, use [completely-remove-snap.sh](https://github.com/PhoenixStormJr/remove-snap-from-ubuntu/blob/main/completely-remove-snap.sh)
