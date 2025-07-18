@@ -43,9 +43,13 @@ else
     echo "Pinning firefox and chromium to apt"
     # Pin only firefox and chromium at top priority; block everything else
     sudo tee "/etc/apt/preferences.d/linuxmint" > /dev/null <<EOF
-Package: ubuntu-system-adjustments mintsystem mint-common mint-translations mint-info mint-info-xfce firefox chromium
+Package: firefox chromium
 Pin: origin packages.linuxmint.com
 Pin-Priority: 1001
+
+Package: ubuntu-system-adjustments mintsystem mint-common mint-translations mint-info mint-info-xfce
+Pin: origin packages.linuxmint.com
+Pin-Priority: 501
 
 Package: *
 Pin: origin packages.linuxmint.com
