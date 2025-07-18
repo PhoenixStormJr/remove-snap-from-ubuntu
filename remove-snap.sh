@@ -66,6 +66,13 @@ EOF
 fi
 
 
+echo "Checking for Snap versions of Firefox/Chromium to remove..."
+if command -v snap >/dev/null; then
+    sudo snap remove --purge firefox || true
+    sudo snap remove --purge chromium || true
+fi
+
+
 # Update and install Firefox and Chromium from Mint
 echo "Installing DEB versions of firefox and chromium"
 sudo apt update
