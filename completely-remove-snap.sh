@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # Get Ubuntu version as float (e.g., 24.05 becomes 24.05)
 ubuntu_version=$(lsb_release -rs)
@@ -32,13 +34,17 @@ if [[ -f "$repo_file" && -f "$gpg_file" && -f "$pin_file" ]]; then
 else
     echo "[+] Configuring Linux Mint repo and pinning..."
 
+    #Downloading Linux Mint key or just exiting if failed:
+    echo "Adding linuxmint GPG key to your system"
+    # Add Mint GPG key
+    if ! sudo wget -q https://raw.githubusercontent.com/PhoenixStormJr/remove-snap-from-ubuntu/main/linuxmint-keyring.gpg -O /etc/apt/trusted.gpg.d/linuxmint.gpg; then
+        echo "❌ Failed to download Mint GPG key. Exiting."
+        exit 1
+    fi
+
     # Add Mint repo for chosen codename
     echo "Adding linuxmint repo to your system with codename $mint_codename"
     echo "deb http://packages.linuxmint.com $mint_codename main upstream import backport" | sudo tee "$repo_file"
-
-    echo "Adding linuxmint GPG key to your system"
-    # Add Mint GPG key
-    sudo wget https://raw.githubusercontent.com/PhoenixStormJr/remove-snap-from-ubuntu/main/linuxmint-keyring.gpg -O /etc/apt/trusted.gpg.d/linuxmint.gpg
 
     echo "Pinning firefox and chromium to apt"
     # Pin only firefox and chromium at top priority; block everything else
@@ -60,10 +66,12 @@ EOF
 fi
 
 #COMPLETELY removing snap:
-sudo snap remove --purge firefox
-sudo snap remove --purge chromium
-sudo snap remove --purge chromium-browser
-sudo snap remove --purge core core20 core22 snapd || true
+if command -v snap >/dev/null; then
+    echo "[*] Removing Snap packages..."
+    sudo snap remove --purge firefox chromium chromium-browser core core20 core22 snapd || true
+else
+    echo "[*] Snap not installed — skipping Snap removal."
+fi
 
 
 
