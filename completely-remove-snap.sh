@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# Get Ubuntu version as float (e.g., 24.05 becomes 24.05)
+ubuntu_version=$(lsb_release -rs)
+ubuntu_major=$(echo "$ubuntu_version" | cut -d. -f1)
+ubuntu_minor=$(echo "$ubuntu_version" | cut -d. -f2)
+ubuntu_float=$(printf "%.2f" "$ubuntu_major.$ubuntu_minor")
+
+echo "[*] Detected Ubuntu version: $ubuntu_float"
+
+# Determine the closest lower or equal Ubuntu base version Mint supports
+if (( $(echo "$ubuntu_float >= 24.04" | bc -l) )); then
+    mint_codename="xia"         # Mint 22 → Ubuntu 24.04
+elif (( $(echo "$ubuntu_float >= 22.04" | bc -l) )); then
+    mint_codename="vanessa"     # Mint 21.1 → Ubuntu 22.04
+elif (( $(echo "$ubuntu_float >= 20.04" | bc -l) )); then
+    mint_codename="ulyana"      # Mint 20 → Ubuntu 20.04
+else
+    echo "[-] No compatible Mint codename found for Ubuntu $ubuntu_float"
+    exit 1
+fi
+
+echo "[+] Using Linux Mint codename: $mint_codename (for Ubuntu base <= $ubuntu_float)"
+
+repo_file="/etc/apt/sources.list.d/linuxmint.list"
+gpg_file="/etc/apt/trusted.gpg.d/linuxmint.gpg"
+pin_file="/etc/apt/preferences.d/linuxmint"
+
+# Only configure if not already done
+if [[ -f "$repo_file" && -f "$gpg_file" && -f "$pin_file" ]]; then
+    echo "[*] Mint repo, GPG key, and pinning already configured — skipping setup."
+else
+    echo "[+] Configuring Linux Mint repo and pinning..."
+
+    # Add Mint repo for chosen codename
+    echo "Adding linuxmint repo to your system with codename $mint_codename"
+    echo "deb http://packages.linuxmint.com $mint_codename main upstream import backport" | sudo tee "$repo_file"
+
+    echo "Adding linuxmint GPG key to your system"
+    # Add Mint GPG key
+    sudo wget https://raw.githubusercontent.com/PhoenixStormJr/remove-snap-from-ubuntu/main/linuxmint-keyring.gpg -O /etc/apt/trusted.gpg.d/linuxmint.gpg
+
+    echo "Pinning firefox and chromium to apt"
+    # Pin only firefox and chromium at top priority; block everything else
+    sudo tee "/etc/apt/preferences.d/linuxmint" > /dev/null <<EOF
+Package: firefox chromium
+Pin: origin packages.linuxmint.com
+Pin-Priority: 1001
+
+Package: ubuntu-system-adjustments mintsystem mint-common mint-translations mint-info mint-info-xfce
+Pin: origin packages.linuxmint.com
+Pin-Priority: 501
+
+Package: *
+Pin: origin packages.linuxmint.com
+Pin-Priority: -1
+EOF
+
+    echo "[+] Mint repo and pinning set up for codename '$mint_codename'."
+fi
+
+#COMPLETELY removing snap:
+sudo snap remove --purge firefox
+sudo snap remove --purge chromium
+sudo snap remove --purge chromium-browser
+sudo snap remove --purge core core20 core22 snapd || true
+
+
+
+echo "🧹 Purging snapd..."
+sudo apt purge -y snapd
+sudo apt autoremove --purge -y
+sudo rm -rf ~/snap /snap /var/snap /var/lib/snapd /var/cache/snapd
+
+echo "🚫 Blocking snapd reinstall via APT..."
+sudo tee /etc/apt/preferences.d/nosnap.pref > /dev/null <<EOF
+Package: snapd
+Pin: release a=*
+Pin-Priority: -10
+EOF
+sudo tee /etc/apt/preferences.d/block-snapd > /dev/null <<EOF
+Package: snapd
+Pin: origin *
+Pin-Priority: -1
+EOF
+echo "🔒 Holding snapd just in case..."
+sudo apt-mark hold snapd
+echo "❌ Optionally removing Ubuntu Software (Snap GUI)..."
+sudo apt purge -y ubuntu-software gnome-software || true
+echo "✅ Snap is completely removed and blocked."
+
+
+
+# Update and install Firefox and Chromium from Mint
+echo "Installing DEB versions of firefox and chromium"
+sudo apt update
+sudo apt install -y firefox chromium
+
+echo "[✓] Firefox and Chromium installed from Linux Mint '$mint_codename' repo."
