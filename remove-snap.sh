@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # Get Ubuntu version as float (e.g., 24.05 becomes 24.05)
 ubuntu_version=$(lsb_release -rs)
@@ -32,13 +34,17 @@ if [[ -f "$repo_file" && -f "$gpg_file" && -f "$pin_file" ]]; then
 else
     echo "[+] Configuring Linux Mint repo and pinning..."
 
+    #Downloading Linux Mint key or just exiting if failed:
+    echo "Adding linuxmint GPG key to your system"
+    # Add Mint GPG key
+    if ! sudo wget -q https://raw.githubusercontent.com/PhoenixStormJr/remove-snap-from-ubuntu/main/linuxmint-keyring.gpg -O /etc/apt/trusted.gpg.d/linuxmint.gpg; then
+        echo "❌ Failed to download Mint GPG key. Exiting."
+        exit 1
+    fi
+
     # Add Mint repo for chosen codename
     echo "Adding linuxmint repo to your system with codename $mint_codename"
     echo "deb http://packages.linuxmint.com $mint_codename main upstream import backport" | sudo tee "$repo_file"
-
-    echo "Adding linuxmint GPG key to your system"
-    # Add Mint GPG key
-    sudo wget https://raw.githubusercontent.com/PhoenixStormJr/remove-snap-from-ubuntu/main/linuxmint-keyring.gpg -O /etc/apt/trusted.gpg.d/linuxmint.gpg
 
     echo "Pinning firefox and chromium to apt"
     # Pin only firefox and chromium at top priority; block everything else
@@ -58,6 +64,7 @@ EOF
 
     echo "[+] Mint repo and pinning set up for codename '$mint_codename'."
 fi
+
 
 # Update and install Firefox and Chromium from Mint
 echo "Installing DEB versions of firefox and chromium"
