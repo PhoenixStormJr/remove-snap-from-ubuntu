@@ -70,6 +70,7 @@ echo "Checking for Snap versions of Firefox/Chromium to remove..."
 if command -v snap >/dev/null; then
     sudo snap remove --purge firefox || true
     sudo snap remove --purge chromium || true
+    sudo snap remove --purge chromium-browser || true
 fi
 
 
