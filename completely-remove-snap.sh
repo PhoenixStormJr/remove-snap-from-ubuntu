@@ -68,7 +68,13 @@ fi
 #COMPLETELY removing snap:
 if command -v snap >/dev/null; then
     echo "[*] Removing Snap packages..."
-    sudo snap remove --purge firefox chromium chromium-browser core core20 core22 snapd || true
+    sudo snap remove --purge firefox || true
+    sudo snap remove --purge chromium || true
+    sudo snap remove --purge chromium-browser || true
+    sudo snap remove --purge core || true
+    sudo snap remove --purge core20 || true
+    sudo snap remove --purge core22 || true
+    sudo snap remove --purge snapd || true
 else
     echo "[*] Snap not installed — skipping Snap removal."
 fi
@@ -100,7 +106,7 @@ echo "✅ Snap is completely removed and blocked."
 
 
 # Update and install Firefox and Chromium from Mint
-echo "Installing DEB versions of firefox and chromium"
+echo "[*] Installing DEB versions of firefox and chromium"
 sudo apt update
 sudo apt install -y firefox chromium
 
