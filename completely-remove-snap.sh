@@ -97,8 +97,6 @@ Package: snapd
 Pin: origin *
 Pin-Priority: -1
 EOF
-echo "🔒 Holding snapd just in case..."
-sudo apt-mark hold snapd
 echo "❌ Optionally removing Ubuntu Software (Snap GUI)..."
 sudo apt purge -y ubuntu-software gnome-software || true
 echo "✅ Snap is completely removed and blocked."
